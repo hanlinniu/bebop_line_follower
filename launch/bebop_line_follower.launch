@@ -1,0 +1,5 @@
+<launch>
+	<node name="image_receiver" pkg="bebop_line_follower" type="learning.py" required="true"/>
+	<node name="controller" pkg="bebop_line_follower" type="controller.py" required="true"/>
+
+</launch>
