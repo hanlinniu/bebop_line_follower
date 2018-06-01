@@ -51,11 +51,11 @@ class controller:
 
         self.pub_test = rospy.Publisher('/pid_teste', String, queue_size=10)
 
-    def callback(self, Quaternion):
+    def callback(self, data):
 
-        if Quaternion.w ==1:
+        if data.w == 1:
 
-            self.line_follower(Quaternion)
+            self.line_follower(data)
 
     def ReceiveRPY(self, Ardrone3PilotingStateAttitudeChanged):
 
@@ -76,16 +76,16 @@ class controller:
     def SendCommand(self):
         self.pubCommand.publish(self.command)
 
-    def line_follower(self, Quaternion):
+    def line_follower(self, data):
         # controller for the line follower mode
         if self.first_time == 0:
             self.roll_control.setConstants(0.1, 0, 1)
             self.yaw_control.setConstants(1, 0, 0.1)
             self.first_time = 1
 
-        x = -Quaternion.x
-        detecting = int(Quaternion.y)
-        angle = -Quaternion.z
+        x = -data.x
+        detecting = int(data.y)
+        angle = -data.z
 
         offset = int(856 * tan(self.rotX) / (tan(0.52 + self.rotX) + tan(0.52 - self.rotX)))
 
