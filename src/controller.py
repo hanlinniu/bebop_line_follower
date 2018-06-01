@@ -15,19 +15,17 @@ roslib.load_manifest('bebop_line_follower')
 import rospy
 from std_msgs.msg import String, Int32
 from pid import PID
-from drone_status import DroneStatus
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Quaternion
 from math import *
-from bebop_msgs.msg import Ardrone3PilotingStateFlyingStateChanged\
-    ,Ardrone3PilotingStateAttitudeChanged,Ardrone3PilotingStateSpeedChanged
+from bebop_msgs.msg import Ardrone3PilotingStateAttitudeChanged, Ardrone3PilotingStateSpeedChanged
 
 
 class controller:
     ''' Handles the PID control in every axis of the drone deppending on the flight mode '''
 
     def __init__(self):
-        self.roll_control = PID(1, 0, 10)
+        self.roll_control = PID(0.1, 0, 1)
         self.altitude_control = PID(1, 0, 0)
         self.pitch_control = PID(0.1, 0, 0)
         self.yaw_control = PID(1, 0, 0.1)
@@ -49,26 +47,23 @@ class controller:
         self.droneSpeed = rospy.Subscriber('/bebop/states/ardrone3/PilotingState/SpeedChanged',
                                            Ardrone3PilotingStateSpeedChanged, self.ReceiveSpeed)
 
-        # self.cmd_vel = rospy.Publisher('/bebop/camera_control', Twist, queue_size=10)
+        self.pubCommand = rospy.Publisher('bebop/cmd_vel', Twist, queue_size=10)
 
-        self.pubCommand = rospy.Publisher('bebop/cmd_vel', Twist,queue_size=10)
         self.pub_test = rospy.Publisher('/pid_teste', String, queue_size=10)
 
+    def callback(self, Quaternion):
 
-    def callback(self, data):
+        if Quaternion.w ==1:
 
-        self.line_follower(data)
-        self.keyboard_mode=0
+            self.line_follower(Quaternion)
 
-    def ReceiveRPY(self, rpy):
+    def ReceiveRPY(self, Ardrone3PilotingStateAttitudeChanged):
 
-        rpy = Ardrone3PilotingStateAttitudeChanged()
-        self.rotX = rpy.roll * (pi / 180)
+        self.rotX = Ardrone3PilotingStateAttitudeChanged.roll * (pi / 180)
 
-    def ReceiveSpeed(self, velocity):
+    def ReceiveSpeed(self, Ardrone3PilotingStateSpeedChanged):
 
-        velocity = Ardrone3PilotingStateSpeedChanged()
-        self.vy = velocity.speedX / 1000
+        self.vy = Ardrone3PilotingStateSpeedChanged.speedX / 1000
 
     def SetCommand(self, roll=0, pitch=0, yaw_velocity=0, z_velocity=0):
 
@@ -80,29 +75,26 @@ class controller:
 
     def SendCommand(self):
         self.pubCommand.publish(self.command)
-        # send the current command
-        # if self.status == DroneStatus.state_flying or self.status == DroneStatus.state_hovering:
-        #
 
-    def line_follower(self, data):
+    def line_follower(self, Quaternion):
         # controller for the line follower mode
         if self.first_time == 0:
-            self.roll_control.setConstants(1, 0, 10)
+            self.roll_control.setConstants(0.1, 0, 1)
             self.yaw_control.setConstants(1, 0, 0.1)
             self.first_time = 1
 
-        x = -data.x
-        detecting = int(data.y)
-        angle = -data.z
+        x = -Quaternion.x
+        detecting = int(Quaternion.y)
+        angle = -Quaternion.z
 
         offset = int(856 * tan(self.rotX) / (tan(0.52 + self.rotX) + tan(0.52 - self.rotX)))
 
         if detecting != 0:
-            x = (x + offset) / 300.0
+            x = (x + offset) / 480.0
             pitch_vel = 0.1
         else:
             pitch_vel = 0
-            x /= 300.0
+            x /= 480.0
 
         if x == 0:
             x = self.roll_control.last_error
@@ -121,6 +113,7 @@ class controller:
 
         self.pub_test.publish(str(roll_output) + " " + str(pitch_vel) + " " + str(yaw_output))
 
+
 def main(args):
     ic = controller()
     rospy.init_node('controller', anonymous=True)
@@ -131,5 +124,5 @@ def main(args):
 if __name__ == '__main__':
     #
     import sys
-    # main(sys.argv[1:])
+
     main(sys.argv)

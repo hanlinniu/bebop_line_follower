@@ -8,7 +8,6 @@ __Team__  = MRL_UAV
 
 '''
 
-
 import roslib
 
 roslib.load_manifest('bebop_line_follower')
@@ -36,14 +35,10 @@ class image_receiver:
         self.subscribed = 0
         self.lower = np.array([5, 50, 50], dtype="uint8")
         self.upper = np.array([15, 255, 255], dtype="uint8")
-        # self.lower = np.array([110, 50, 50], dtype="uint8")
-        # self.upper = np.array([130, 255, 255], dtype="uint8")
-        # self.lower = np.array([10, 70, 50], dtype="uint8")
-        # self.upper = np.array([180, 255, 255], dtype="uint8")
         self.contours = []
         self.kernelOpen = np.ones((5, 5))
         self.kernelClose = np.ones((20, 20))
-        self.image_pos_pub = rospy.Publisher("data", Quaternion, queue_size=10) #change topic nmae
+        self.image_pos_pub = rospy.Publisher("data", Quaternion, queue_size=10)  # change topic nmae
 
     def follow_line(self, camera_image):
         # sends for the controller the distance from the line and the angle between the drone and the line
@@ -82,23 +77,31 @@ class image_receiver:
 
     def callback(self, data):
 
-        # selects between modes
+        start = time.time()
+
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            self.follow_line(cv_image)
         except CvBridgeError as e:
-            print (e);
+            print(e);
+
+        if self.camera ==1:
+            self.follow_line(cv_image)
 
     def __del__(self):
         pass
+
+
 ic = None
 ic = image_receiver(1)
 
+
 def callback(data):
     ic.callback(data)
+
+
 def main(args):
     rospy.init_node('image_receiver', anonymous=True)
-    rospy.Subscriber("/bebop/image_raw", Image,callback)
+    rospy.Subscriber("/bebop/image_raw", Image, callback)
     try:
         rospy.spin()
     except KeyboardInterrupt:
