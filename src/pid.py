@@ -29,7 +29,7 @@ class PID:
         self.last_error = error
         self.last_run = now
         output = self.integral + derivative + self.kp * error
-        output = min(1, max(-1, output))
+        output = min(0.5, max(-0.5, output))
         return output
 
     def setConstants(self, kp, ki, kd):

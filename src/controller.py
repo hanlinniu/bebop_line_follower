@@ -25,10 +25,10 @@ class controller:
     ''' Handles the PID control in every axis of the drone deppending on the flight mode '''
 
     def __init__(self):
-        self.roll_control = PID(0.1, 0, 1)
-        self.altitude_control = PID(1, 0, 0)
-        self.pitch_control = PID(0.1, 0, 0)
-        self.yaw_control = PID(1, 0, 0.1)
+        self.roll_control = PID(0.02, 0, 0)
+        self.altitude_control = PID(0.02, 0, 0)
+        self.pitch_control = PID(0.02, 0, 0)
+        self.yaw_control = PID(0.1, 0, 0)
         self.command = Twist()
         self.first_time = 0
         self.state_altitude = 0
@@ -44,8 +44,8 @@ class controller:
         self.droneRPY = rospy.Subscriber('/bebop/states/ardrone3/PilotingState/AttitudeChanged',
                                          Ardrone3PilotingStateAttitudeChanged, self.ReceiveRPY)
 
-        self.droneSpeed = rospy.Subscriber('/bebop/states/ardrone3/PilotingState/SpeedChanged',
-                                           Ardrone3PilotingStateSpeedChanged, self.ReceiveSpeed)
+        # self.droneSpeed = rospy.Subscriber('/bebop/states/ardrone3/PilotingState/SpeedChanged',
+        #                                    Ardrone3PilotingStateSpeedChanged, self.ReceiveSpeed)
 
         self.pubCommand = rospy.Publisher('bebop/cmd_vel', Twist, queue_size=10)
 
@@ -57,13 +57,10 @@ class controller:
 
             self.line_follower(data)
 
-    def ReceiveRPY(self, Ardrone3PilotingStateAttitudeChanged):
+    def ReceiveRPY(self, data):
 
-        self.rotX = Ardrone3PilotingStateAttitudeChanged.roll * (pi / 180)
+        self.rotX = data.roll
 
-    def ReceiveSpeed(self, Ardrone3PilotingStateSpeedChanged):
-
-        self.vy = Ardrone3PilotingStateSpeedChanged.speedX / 1000
 
     def SetCommand(self, roll=0, pitch=0, yaw_velocity=0, z_velocity=0):
 
@@ -79,19 +76,17 @@ class controller:
     def line_follower(self, data):
         # controller for the line follower mode
         if self.first_time == 0:
-            self.roll_control.setConstants(0.1, 0, 1)
-            self.yaw_control.setConstants(1, 0, 0.1)
+            self.roll_control.setConstants(0.02, 0, 0)
+            self.yaw_control.setConstants(0.1, 0, 0)
             self.first_time = 1
 
         x = -data.x
         detecting = int(data.y)
         angle = -data.z
 
-        offset = int(856 * tan(self.rotX) / (tan(0.52 + self.rotX) + tan(0.52 - self.rotX)))
-
         if detecting != 0:
-            x = (x + offset) / 480.0
-            pitch_vel = 0.1
+            x /= 480.0
+            pitch_vel = 0.01
         else:
             pitch_vel = 0
             x /= 480.0
