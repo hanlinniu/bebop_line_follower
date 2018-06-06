@@ -44,8 +44,6 @@ class controller:
         self.droneRPY = rospy.Subscriber('/bebop/states/ardrone3/PilotingState/AttitudeChanged',
                                          Ardrone3PilotingStateAttitudeChanged, self.ReceiveRPY)
 
-        # self.droneSpeed = rospy.Subscriber('/bebop/states/ardrone3/PilotingState/SpeedChanged',
-        #                                    Ardrone3PilotingStateSpeedChanged, self.ReceiveSpeed)
 
         self.pubCommand = rospy.Publisher('bebop/cmd_vel', Twist, queue_size=10)
 
