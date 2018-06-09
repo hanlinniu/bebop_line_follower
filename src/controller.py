@@ -26,9 +26,9 @@ class controller:
 
     def __init__(self):
         self.roll_control = PID(0.02, 0, 0)
-        self.altitude_control = PID(0.02, 0, 0)
-        self.pitch_control = PID(0.02, 0, 0)
-        self.yaw_control = PID(0.1, 0, 0)
+        self.altitude_control = PID(0.02, 0.001, 0)
+        self.pitch_control = PID(0.01, 0.01, 0)
+        self.yaw_control = PID(0.11, 0, 0)
         self.command = Twist()
         self.first_time = 0
         self.state_altitude = 0
@@ -75,15 +75,16 @@ class controller:
         # controller for the line follower mode
         if self.first_time == 0:
             self.roll_control.setConstants(0.02, 0, 0)
-            self.yaw_control.setConstants(0.1, 0, 0)
+            self.yaw_control.setConstants(0.11, 0, 0)
             self.first_time = 1
 
         x = -data.x
         detecting = int(data.y)
         angle = -data.z
+        offset = int(856 * tan(self.rotX) / (tan(0.52 + self.rotX) + tan(0.52-self.rotX)))
 
         if detecting != 0:
-            x /= 480.0
+            x = (x) / 480.0
             pitch_vel = 0.01
         else:
             pitch_vel = 0
