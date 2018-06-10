@@ -35,10 +35,10 @@ class image_receiver:
         self.subscribed = 0
         # self.lower = np.array([0, 141, 214], dtype="uint8")
         # self.upper = np.array([15, 255, 255], dtype="uint8")
-        # self.lower = np.array([0, 224, 0], dtype=np.uint8)
-        # self.upper = np.array([103, 255, 255], dtype=np.uint8)
-        self.lower = np.array([99, 48, 72], dtype=np.uint8)
-        self.upper = np.array([255, 255, 255], dtype=np.uint8)
+        self.lower = np.array([0, 224, 0], dtype=np.uint8)
+        self.upper = np.array([103, 255, 255], dtype=np.uint8)
+        # self.lower = np.array([99, 48, 72], dtype=np.uint8)
+        # self.upper = np.array([255, 255, 255], dtype=np.uint8)
         self.contours = []
         self.kernelOpen = np.ones((5, 5))
         self.kernelClose = np.ones((20, 20))
@@ -120,7 +120,7 @@ def callback(data):
 
 def main(args):
     rospy.init_node('image_receiver', anonymous=True)
-    rospy.Subscriber("/usb_cam/image_raw", Image, callback)
+    rospy.Subscriber("/bebop/image_raw", Image, callback)
     try:
         rospy.spin()
     except KeyboardInterrupt:
