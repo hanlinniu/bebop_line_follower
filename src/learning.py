@@ -33,8 +33,12 @@ class image_receiver:
         self.camera = camera
         self.bridge = CvBridge()
         self.subscribed = 0
-        self.lower = np.array([5, 50, 50], dtype="uint8")
-        self.upper = np.array([15, 255, 255], dtype="uint8")
+        # self.lower = np.array([0, 141, 214], dtype="uint8")
+        # self.upper = np.array([15, 255, 255], dtype="uint8")
+        # self.lower = np.array([0, 224, 0], dtype=np.uint8)
+        # self.upper = np.array([103, 255, 255], dtype=np.uint8)
+        self.lower = np.array([99, 48, 72], dtype=np.uint8)
+        self.upper = np.array([255, 255, 255], dtype=np.uint8)
         self.contours = []
         self.kernelOpen = np.ones((5, 5))
         self.kernelClose = np.ones((20, 20))
@@ -43,9 +47,17 @@ class image_receiver:
     def follow_line(self, camera_image):
         # sends for the controller the distance from the line and the angle between the drone and the line
         global image_exist
+
         height, width = camera_image.shape[:2]
-        crop_img = camera_image[0:150, 0:width]
-        mask = cv2.inRange(crop_img, self.lower, self.upper)
+        a = height / 2
+        b = width / 2
+
+        # crop_img = camera_image[a-200:a+200, b-300:b+300]
+        crop_img = camera_image[0:300, 0:width]
+        img2 = cv2.GaussianBlur(crop_img, (15,15),2)
+
+        hsv = cv2.cvtColor(img2, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, self.lower, self.upper)
         im2, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         one_color_image = cv2.bitwise_and(crop_img, crop_img, mask=mask)
 
@@ -54,15 +66,22 @@ class image_receiver:
         detecting = 0
         for i in contours:
             detecting = 1
-            (x, y), radius = cv2.minEnclosingCircle(i)
-            if y < best_y:
-                best_y = y
-                best_x = x
-            if y > worst_y:
-                worst_y = y
-                worst_x = x
+            # (x, y), radius = cv2.minEnclosingCircle(i)
+            M = cv2.moments(i)
+            if M["m00"] != 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+            else:
+                cx, cy = 0, 0
+            if cy < best_y:
+                best_y = cy
+                best_x = cx
+            if cy > worst_y:
+                worst_y = cy
+                worst_x = cx
         if best_y != worst_y:
             ang = float(-((best_x - worst_x) / (best_y - worst_y)))
+
         else:
             ang = 0
         self.worst_x = (worst_x - width / 2)
@@ -101,7 +120,7 @@ def callback(data):
 
 def main(args):
     rospy.init_node('image_receiver', anonymous=True)
-    rospy.Subscriber("/bebop/image_raw", Image, callback)
+    rospy.Subscriber("/usb_cam/image_raw", Image, callback)
     try:
         rospy.spin()
     except KeyboardInterrupt:

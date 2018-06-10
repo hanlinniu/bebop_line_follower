@@ -18,7 +18,8 @@ from pid import PID
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Quaternion
 from math import *
-from bebop_msgs.msg import Ardrone3PilotingStateAttitudeChanged, Ardrone3PilotingStateSpeedChanged
+from bebop_msgs.msg import Ardrone3PilotingStateAttitudeChanged, Ardrone3PilotingStateFlyingStateChanged
+from drone_status import DroneStatus
 
 
 class controller:
@@ -26,9 +27,9 @@ class controller:
 
     def __init__(self):
         self.roll_control = PID(0.02, 0, 0)
-        self.altitude_control = PID(0.02, 0.001, 0)
-        self.pitch_control = PID(0.01, 0.01, 0)
-        self.yaw_control = PID(0.11, 0, 0)
+        self.altitude_control = PID(0.02, 0, 0)
+        self.pitch_control = PID(0.01, 0, 0)
+        self.yaw_control = PID(0.11, 0.01, 0)
         self.command = Twist()
         self.first_time = 0
         self.state_altitude = 0
@@ -38,16 +39,25 @@ class controller:
         self.last_time = 0
         self.keyboard_mode = 0
         self.rotX = 0
+        self.status = -1
 
         self.image_pos = rospy.Subscriber("data", Quaternion, self.callback)
 
         self.droneRPY = rospy.Subscriber('/bebop/states/ardrone3/PilotingState/AttitudeChanged',
                                          Ardrone3PilotingStateAttitudeChanged, self.ReceiveRPY)
 
+        self.fly = rospy.Subscriber('/bebop/states/ardrone3/PilotingState/FlyingStateChanged',
+                                    Ardrone3PilotingStateFlyingStateChanged,self.statuss)
+
 
         self.pubCommand = rospy.Publisher('bebop/cmd_vel', Twist, queue_size=10)
 
         self.pub_test = rospy.Publisher('/pid_teste', String, queue_size=10)
+
+
+    def statuss(self,data):
+
+        self.status = data.state
 
     def callback(self, data):
 
@@ -69,13 +79,17 @@ class controller:
         self.command.angular.z = yaw_velocity
 
     def SendCommand(self):
+
+       # if self.status == DroneStatus.state_flying  or self.status == DroneStatus.state_hovering:
+       #      self.pubCommand.publish(self.command)
+       #
         self.pubCommand.publish(self.command)
 
     def line_follower(self, data):
         # controller for the line follower mode
         if self.first_time == 0:
             self.roll_control.setConstants(0.02, 0, 0)
-            self.yaw_control.setConstants(0.11, 0, 0)
+            self.yaw_control.setConstants(0.11, 0.01, 0)
             self.first_time = 1
 
         x = -data.x

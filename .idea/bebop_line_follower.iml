@@ -4,7 +4,7 @@
     <content url="file://$MODULE_DIR$/../../devel/lib/python2.7/dist-packages" />
     <content url="file://$MODULE_DIR$" />
     <content url="file:///opt/ros/kinetic/lib/python2.7/dist-packages" />
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 2.7 (bebop_line_follower)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TestRunnerService">
