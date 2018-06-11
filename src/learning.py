@@ -66,19 +66,19 @@ class image_receiver:
         detecting = 0
         for i in contours:
             detecting = 1
-            # (x, y), radius = cv2.minEnclosingCircle(i)
-            M = cv2.moments(i)
-            if M["m00"] != 0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
-            else:
-                cx, cy = 0, 0
-            if cy < best_y:
-                best_y = cy
-                best_x = cx
-            if cy > worst_y:
-                worst_y = cy
-                worst_x = cx
+            (x, y), radius = cv2.minEnclosingCircle(i)
+            # M = cv2.moments(i)
+            # if M["m00"] != 0:
+            #     cx = int(M["m10"] / M["m00"])
+            #     cy = int(M["m01"] / M["m00"])
+            # else:
+            #     cx, cy = 0, 0
+            if y < best_y:
+                best_y = y
+                best_x = x
+            if y > worst_y:
+                worst_y = y
+                worst_x = x
         if best_y != worst_y:
             ang = float(-((best_x - worst_x) / (best_y - worst_y)))
 
