@@ -73,7 +73,7 @@ class image_receiver:
             ang = 0
         self.worst_x = (worst_x - width / 2)
         cv2.circle(one_color_image, (int(best_x), int(best_y)), 5, (0, 255, 0), -1)
-        cv2.circle(one_color_image, (int(worst_x), int(worst_y)), 5, (0, 0, 255), -1)
+        cv2.circle(one_color_image, (int(worst_x), int(worst_y)), 5, (255, 0, 0), -1)
         self.image_pos_pub.publish(self.worst_x, detecting, atan(ang), self.camera)
         one_color_image = cv2.resize(one_color_image, (0, 0), fx=0.7, fy=0.7)
         crop_img = cv2.resize(crop_img, (0, 0), fx=0.7, fy=0.7)
