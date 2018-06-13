@@ -33,17 +33,17 @@ class image_receiver:
         self.camera = camera
         self.bridge = CvBridge()
         self.subscribed = 0
-        # self.lower = np.array([0, 141, 214], dtype="uint8")
-        # self.upper = np.array([15, 255, 255], dtype="uint8")
-        self.lower = np.array([0, 224, 0], dtype=np.uint8)
-        self.upper = np.array([103, 255, 255], dtype=np.uint8)
-        # self.lower = np.array([99, 48, 72], dtype=np.uint8)
+        self.lower = np.array([0, 141, 214], dtype="uint8")
+        self.upper = np.array([15, 255, 255], dtype="uint8")
+        # self.lower = np.array([6, 23, 208], dtype=np.uint8)
+        # self.upper = np.array([255, 255, 255], dtype=np.uint8)
+        # self.lower = np.array([0, 180, 72], dtype=np.uint8)
         # self.upper = np.array([255, 255, 255], dtype=np.uint8)
         self.contours = []
         self.kernelOpen = np.ones((5, 5))
         self.kernelClose = np.ones((20, 20))
         self.image_pos_pub = rospy.Publisher("data", Quaternion, queue_size=10)  # change topic nmae
-
+        self.pubpub = rospy.Publisher("/low",String,queue_size=10)
     def follow_line(self, camera_image):
         # sends for the controller the distance from the line and the angle between the drone and the line
         global image_exist
@@ -51,28 +51,21 @@ class image_receiver:
         height, width = camera_image.shape[:2]
         a = height / 2
         b = width / 2
-
-        # crop_img = camera_image[a-200:a+200, b-300:b+300]
-        crop_img = camera_image[0:300, 0:width]
+        #
+        crop_img = camera_image[a-200:a+200, b-300:b+300]
+        # crop_img = camera_image[0:300, 0:width]
         img2 = cv2.GaussianBlur(crop_img, (15,15),2)
 
         hsv = cv2.cvtColor(img2, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.lower, self.upper)
-        im2, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        im2,contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         one_color_image = cv2.bitwise_and(crop_img, crop_img, mask=mask)
-
         best_x, best_y = width / 2, height + 1
         worst_x, worst_y = width / 2, -1
         detecting = 0
         for i in contours:
             detecting = 1
             (x, y), radius = cv2.minEnclosingCircle(i)
-            # M = cv2.moments(i)
-            # if M["m00"] != 0:
-            #     cx = int(M["m10"] / M["m00"])
-            #     cy = int(M["m01"] / M["m00"])
-            # else:
-            #     cx, cy = 0, 0
             if y < best_y:
                 best_y = y
                 best_x = x
