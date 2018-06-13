@@ -11,7 +11,7 @@ def nothing(x):
 cv2.namedWindow('Trackbar window')
 
 # Open webcam, choose the nbr change '0' to nbr of your webcam
-capture = cv2.VideoCapture(1)
+capture = cv2.VideoCapture(0)
 
 # create trackbars for color change
 cv2.createTrackbar('H_high', 'Trackbar window', 0, 255, nothing)
